@@ -31,7 +31,10 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ user, onSendMon
               <table className="w-full text-sm text-left text-black">
                 <thead className="text-xs text-black uppercase bg-yellow-400">
                   <tr>
+                    <th scope="col" className="px-6 py-3">{t('history.orderNumber')}</th>
                     <th scope="col" className="px-6 py-3">{t('history.date')}</th>
+                    <th scope="col" className="px-6 py-3">{t('history.beneficiary')}</th>
+                    <th scope="col" className="px-6 py-3">{t('history.idNumber')}</th>
                     <th scope="col" className="px-6 py-3">{t('history.destination')}</th>
                     <th scope="col" className="px-6 py-3 text-right">{t('history.totalPaid')}</th>
                     <th scope="col" className="px-6 py-3 text-right">{t('history.receiverGets')}</th>
@@ -40,12 +43,15 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ user, onSendMon
                 </thead>
                 <tbody>
                   {transactions.map((tx) => (
-                    <tr key={tx.id} className="bg-yellow-200 border-b border-black/20 hover:bg-yellow-300">
-                      <td className="px-6 py-4 font-medium text-black whitespace-nowrap">{tx.date}</td>
-                      <td className="px-6 py-4">{tx.destination}</td>
-                      <td className="px-6 py-4 text-right">${tx.total.toFixed(2)}</td>
+                    <tr key={tx.orderNumber} className="bg-yellow-200 border-b border-black/20 hover:bg-yellow-300">
+                      <td className="px-6 py-4 font-medium text-black whitespace-nowrap">{tx.orderNumber}</td>
+                      <td className="px-6 py-4">{tx.date}</td>
+                      <td className="px-6 py-4">{tx.recipient.fullName}</td>
+                      <td className="px-6 py-4">{tx.recipient.idNumber}</td>
+                      <td className="px-6 py-4">{tx.details.destination}</td>
+                      <td className="px-6 py-4 text-right">${tx.details.total.toFixed(2)}</td>
                       <td className="px-6 py-4 text-right">
-                        {tx.receiveAmount.toLocaleString('en-US', { style: 'decimal', minimumFractionDigits: 2 })} {tx.receiveCurrency}
+                        ${tx.details.receiveAmount.toFixed(2)} USD
                       </td>
                       <td className="px-6 py-4 text-center">
                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${

@@ -1,7 +1,4 @@
-// FIX: This file was created to replace placeholder content. It defines the main App component,
-// which manages application state, routing, and context providers. It also exports shared
-// types, resolving module and type errors in other components.
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, ReactNode } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import HowItWorks from './components/HowItWorks';
@@ -16,8 +13,11 @@ import translations from './translations';
 import DynamicImageGallery from './components/DynamicImageGallery';
 import SendingRegions from './components/SendingRegions';
 import TopSendingCountries from './components/TopSendingCountries';
-// FIX: Import the Footer component to resolve the 'Cannot find name 'Footer'' error.
 import Footer from './components/Footer';
+import WarningModal from './components/WarningModal';
+import RecipientForm from './components/RecipientForm';
+import CheckoutPage from './components/CheckoutPage';
+import ReceiptPage from './components/ReceiptPage';
 
 export interface User {
   email: string;
@@ -29,18 +29,31 @@ export interface TransactionDetails {
   receiveAmount: number;
 }
 
-export interface Transaction extends TransactionDetails {
-  id: string;
+export interface RecipientDetails {
+  fullName: string;
+  idNumber: string;
+  email: string;
+  whatsappPhone: string;
+}
+
+export interface Transaction {
+  orderNumber: string;
   date: string;
-  receiveCurrency: string;
+  paymentMethod?: string;
+  details: TransactionDetails;
+  recipient: RecipientDetails;
   status: 'Completed' | 'Pending';
 }
 
+type Page = 'home' | 'history' | 'recipientForm' | 'checkout' | 'receipt';
+
 function App() {
   const [user, setUser] = useState<User | null>(null);
-  const [page, setPage] = useState<'home' | 'history'>('home');
+  const [currentPage, setCurrentPage] = useState<Page>('home');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalInitialView, setAuthModalInitialView] = useState<'login' | 'signup'>('login');
+  const [isWarningModalOpen, setIsWarningModalOpen] = useState(false);
+  const [currentTransaction, setCurrentTransaction] = useState<Partial<Transaction>>({});
 
   const [language, setLanguage] = useState<'en' | 'es'>('es');
 
@@ -61,7 +74,7 @@ function App() {
 
   const handleLogout = () => {
     setUser(null);
-    setPage('home');
+    setCurrentPage('home');
   };
 
   const openAuthModal = (view: 'login' | 'signup') => {
@@ -69,32 +82,109 @@ function App() {
     setIsAuthModalOpen(true);
   };
 
-  const handleStartTransfer = (details: TransactionDetails) => {
+  const handleInitiateTransfer = (details: TransactionDetails) => {
     if (!user) {
       openAuthModal('login');
       return;
-    };
-    const newTransaction: Transaction = {
-      ...details,
-      id: new Date().toISOString(),
-      date: new Date().toLocaleDateString('en-US'),
-      receiveCurrency: 'USD',
-      status: 'Completed', // Simplified for example
-    };
+    }
+    setCurrentTransaction({ details });
+    setIsWarningModalOpen(true);
+  };
 
-    const userTransactionsKey = `transactions_${user.email}`;
-    const existingTransactions: Transaction[] = JSON.parse(localStorage.getItem(userTransactionsKey) || '[]');
-    localStorage.setItem(userTransactionsKey, JSON.stringify([newTransaction, ...existingTransactions]));
-    
-    alert('Transferencia simulada con éxito!');
-    setPage('history');
+  const handleAcceptWarning = () => {
+    setIsWarningModalOpen(false);
+    setCurrentPage('recipientForm');
   };
   
+  const handleRecipientSubmit = (recipientDetails: RecipientDetails) => {
+     setCurrentTransaction(prev => ({ ...prev, recipient: recipientDetails }));
+     setCurrentPage('checkout');
+  };
+
+  const handlePaymentSuccess = (paymentMethod: string) => {
+    if (!user || !currentTransaction.details || !currentTransaction.recipient) return;
+
+    const finalTransaction: Transaction = {
+      ...currentTransaction,
+      orderNumber: Math.random().toString().substr(2, 8),
+      date: new Date().toLocaleDateString(language),
+      paymentMethod,
+      status: 'Completed',
+    } as Transaction;
+
+    setCurrentTransaction(finalTransaction);
+    
+    // Save to local storage
+    const userTransactionsKey = `transactions_${user.email}`;
+    const existingTransactions: Transaction[] = JSON.parse(localStorage.getItem(userTransactionsKey) || '[]');
+    localStorage.setItem(userTransactionsKey, JSON.stringify([finalTransaction, ...existingTransactions]));
+    
+    // Simulate backend actions
+    console.log("--- SIMULATING BACKEND ACTIONS ---");
+    console.log("Sending confirmation email to:", user.email);
+    console.log("Sending notification to admin inbox.");
+    console.log("Appending order to Google Sheets:", {
+      Fecha: finalTransaction.date,
+      Hora: new Date().toLocaleTimeString(language),
+      'Provincia destino': finalTransaction.details.destination,
+      Beneficiario: finalTransaction.recipient.fullName,
+      'Tel/Email': `${finalTransaction.recipient.whatsappPhone} / ${finalTransaction.recipient.email}`,
+      Monto: `${finalTransaction.details.receiveAmount.toFixed(2)} USD`,
+      'Método de pago': finalTransaction.paymentMethod,
+    });
+    console.log("---------------------------------");
+    alert("Email simulations logged to console. Transaction complete!");
+
+
+    setCurrentPage('receipt');
+  };
+
+  const handleNavigate = (page: 'home' | 'history') => {
+    setCurrentPage(page);
+  }
+
   const languageContextValue = {
     language,
     setLanguage,
     t
   };
+
+  let pageContent: ReactNode;
+
+  switch (currentPage) {
+    case 'recipientForm':
+      pageContent = <RecipientForm transactionDetails={currentTransaction.details!} onSubmit={handleRecipientSubmit} onBack={() => setCurrentPage('home')} />;
+      break;
+    case 'checkout':
+      pageContent = <CheckoutPage transaction={currentTransaction as Transaction} onPaymentSuccess={handlePaymentSuccess} onBack={() => setCurrentPage('recipientForm')} />;
+      break;
+    case 'receipt':
+      pageContent = <ReceiptPage transaction={currentTransaction as Transaction} onNewTransfer={() => setCurrentPage('home')} onGoToHistory={() => setCurrentPage('history')} />;
+      break;
+    case 'history':
+       pageContent = user ? <TransactionHistory user={user} onSendMoney={() => setCurrentPage('home')} /> : <>{/* Should not happen */}</>;
+       break;
+    case 'home':
+    default:
+      pageContent = (
+        <>
+          <Hero 
+            user={user}
+            onLoginClick={() => openAuthModal('login')}
+            onStartTransfer={handleInitiateTransfer}
+          />
+          <TrustBadges />
+          <HowItWorks />
+          <DynamicImageGallery />
+          <Features />
+          <SendingRegions />
+          <CubaGallery />
+          <TopSendingCountries />
+          <DownloadApp />
+        </>
+      );
+  }
+
 
   return (
     <LanguageContext.Provider value={languageContextValue}>
@@ -104,29 +194,10 @@ function App() {
           onLogout={handleLogout}
           onLoginClick={() => openAuthModal('login')}
           onSignupClick={() => openAuthModal('signup')}
-          onNavigate={setPage}
+          onNavigate={handleNavigate}
         />
         <main>
-          {page === 'home' && (
-            <>
-              <Hero 
-                user={user}
-                onLoginClick={() => openAuthModal('login')}
-                onStartTransfer={handleStartTransfer}
-              />
-              <TrustBadges />
-              <HowItWorks />
-              <DynamicImageGallery />
-              <Features />
-              <SendingRegions />
-              <CubaGallery />
-              <TopSendingCountries />
-              <DownloadApp />
-            </>
-          )}
-          {page === 'history' && user && (
-            <TransactionHistory user={user} onSendMoney={() => setPage('home')} />
-          )}
+         {pageContent}
         </main>
         <Footer />
 
@@ -135,6 +206,12 @@ function App() {
             initialView={authModalInitialView}
             onClose={() => setIsAuthModalOpen(false)}
             onLoginSuccess={handleLoginSuccess}
+          />
+        )}
+        {isWarningModalOpen && (
+          <WarningModal 
+            onClose={() => setIsWarningModalOpen(false)}
+            onAccept={handleAcceptWarning}
           />
         )}
       </div>
