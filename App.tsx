@@ -9,13 +9,15 @@ import Features from './components/Features';
 import TrustBadges from './components/TrustBadges';
 import CubaGallery from './components/CubaGallery';
 import DownloadApp from './components/DownloadApp';
-import Footer from './components/Footer';
 import AuthModal from './components/AuthModal';
 import TransactionHistory from './components/TransactionHistory';
 import { LanguageContext } from './contexts/LanguageContext';
 import translations from './translations';
 import DynamicImageGallery from './components/DynamicImageGallery';
 import SendingRegions from './components/SendingRegions';
+import TopSendingCountries from './components/TopSendingCountries';
+// FIX: Import the Footer component to resolve the 'Cannot find name 'Footer'' error.
+import Footer from './components/Footer';
 
 export interface User {
   email: string;
@@ -118,6 +120,7 @@ function App() {
               <Features />
               <SendingRegions />
               <CubaGallery />
+              <TopSendingCountries />
               <DownloadApp />
             </>
           )}

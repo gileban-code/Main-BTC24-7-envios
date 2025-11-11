@@ -39,7 +39,7 @@ const translations = {
     'features.feature2Title': 'No Hidden Fees',
     'features.feature2Desc': 'The amount you see is the amount that arrives. Total transparency.',
     'features.feature3Title': 'Home Delivery',
-    'features.feature3Desc': 'We deliver directly to your family\'s hands, in any province of Cuba.',
+    'features.feature3Desc': 'We deliver directly to your family\'s hands, in any province of Cuba, with the utmost possible discretion.',
     'features.feature4Title': 'Guaranteed Delivery',
     'features.feature4Desc': 'We guarantee that the money will arrive safely and on time. Your peace of mind is our priority.',
     'features.supportTitle': '24/7 Customer Support',
@@ -113,6 +113,18 @@ const translations = {
     'regions.title': 'Coverage Across the Entire Island',
     'regions.subtitle': 'We guarantee safe delivery in every province of Cuba, without exception.',
     'regions.mapAlt': 'Map of the provinces of Cuba',
+    // Top Sending Countries
+    'topSendingCountries.title': 'Send From Anywhere',
+    'topSendingCountries.panama': 'Panama',
+    'topSendingCountries.colombia': 'Colombia',
+    'topSendingCountries.mexico': 'Mexico',
+    'topSendingCountries.spain': 'Spain',
+    'topSendingCountries.amsterdam': 'Amsterdam',
+    'topSendingCountries.eu': 'European Union',
+    'topSendingCountries.uae': 'UAE / Dubai',
+    'topSendingCountries.italy': 'Italy',
+    'topSendingCountries.canada': 'Canada',
+    'topSendingCountries.offices': 'Offices',
   },
   es: {
     // Header
@@ -154,7 +166,7 @@ const translations = {
     'features.feature2Title': 'Sin Comisiones Ocultas',
     'features.feature2Desc': 'El monto que ves es el monto que llega. Transparencia total.',
     'features.feature3Title': 'Entrega a Domicilio',
-    'features.feature3Desc': 'Entregamos directamente en las manos de tu familiar, en cualquier provincia de Cuba.',
+    'features.feature3Desc': 'Entregamos directamente en las manos de tu familiar, en cualquier provincia de Cuba bajo la máxima discreción posible.',
     'features.feature4Title': 'Entrega Garantizada',
     'features.feature4Desc': 'Garantizamos que el dinero llegará de forma segura y a tiempo. Tu tranquilidad es nuestra prioridad.',
     'features.supportTitle': 'Soporte al cliente 24/7',
@@ -228,6 +240,18 @@ const translations = {
     'regions.title': 'Cobertura en Toda la Isla',
     'regions.subtitle': 'Garantizamos la entrega segura en cada una de las provincias de Cuba, sin excepciones.',
     'regions.mapAlt': 'Mapa de las provincias de Cuba',
+    // Top Sending Countries
+    'topSendingCountries.title': 'Envía Desde Cualquier Lugar',
+    'topSendingCountries.panama': 'Panamá',
+    'topSendingCountries.colombia': 'Colombia',
+    'topSendingCountries.mexico': 'México',
+    'topSendingCountries.spain': 'España',
+    'topSendingCountries.amsterdam': 'Amsterdam',
+    'topSendingCountries.eu': 'Unión Europea',
+    'topSendingCountries.uae': 'Emiratos Árabes / Dubai',
+    'topSendingCountries.italy': 'Italia',
+    'topSendingCountries.canada': 'Canada',
+    'topSendingCountries.offices': 'Oficinas',
   }
 };
 

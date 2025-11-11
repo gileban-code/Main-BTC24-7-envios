@@ -24,19 +24,21 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout, onLoginClick, onSignupC
 
   const handleNavClick = (page: 'home' | 'history') => {
     onNavigate(page);
-    setIsMenuOpen(false); // Close menu on navigation
+    if (page === 'home') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    setIsMenuOpen(false);
   };
   
   const handleAnchorClick = (anchor: string) => {
-    const element = document.getElementById(anchor);
-    if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
-    } else {
-        onNavigate('home');
-        setTimeout(() => {
-            document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth' });
-        }, 100); // A small delay to allow the home page to render
-    }
+    onNavigate('home');
+    // We need to wait for the home page to be set before we can scroll
+    setTimeout(() => {
+        const element = document.getElementById(anchor);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, 0);
     setIsMenuOpen(false);
   };
 
@@ -49,7 +51,7 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout, onLoginClick, onSignupC
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-6">
-          <button onClick={() => handleNavClick('home')} className="hover:text-white transition-colors">{t('header.sendMoney')}</button>
+          <button onClick={() => handleAnchorClick('hero')} className="hover:text-white transition-colors">{t('header.sendMoney')}</button>
           <a href="#how-it-works" onClick={(e) => { e.preventDefault(); handleAnchorClick('how-it-works'); }} className="hover:text-white transition-colors">{t('header.howItWorks')}</a>
           {user && (
             <button onClick={() => handleNavClick('history')} className="hover:text-white transition-colors">{t('header.history')}</button>
@@ -88,7 +90,7 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout, onLoginClick, onSignupC
       {isMenuOpen && (
         <div className="md:hidden mt-4 bg-black">
           <nav className="flex flex-col items-center space-y-4 py-4">
-            <button onClick={() => handleNavClick('home')} className="hover:text-white transition-colors text-lg">{t('header.sendMoney')}</button>
+            <button onClick={() => handleAnchorClick('hero')} className="hover:text-white transition-colors text-lg">{t('header.sendMoney')}</button>
             <a href="#how-it-works" onClick={(e) => { e.preventDefault(); handleAnchorClick('how-it-works'); }} className="hover:text-white transition-colors text-lg">{t('header.howItWorks')}</a>
             {user && (
               <button onClick={() => handleNavClick('history')} className="hover:text-white transition-colors text-lg">{t('header.history')}</button>
