@@ -1,0 +1,5 @@
+{
+  "name": "BTC 24/7 Envíos",
+  "description": "A web application for sending money internationally, inspired by the Western Union homepage. It allows users to simulate a money transfer process with features like country selection, amount input, and fee calculation.",
+  "requestFramePermissions": []
+}
