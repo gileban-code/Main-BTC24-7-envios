@@ -111,7 +111,7 @@ const translations = {
     // Trust Badges
     'trust.badge1': 'Secure transactions with bank-level encryption.',
     'trust.badge2': 'Fast delivery, guaranteed to every province.',
-    'trust.badge3': 'Top-rated service with thousands of satisfied customers.',
+    'trust.badge3': 'Verified and coordinated deliveries via WhatsApp.',
     // Sending Regions
     'regions.title': 'Coverage Across the Entire Island',
     'regions.subtitle': 'We guarantee safe delivery in every province of Cuba, without exception.',
@@ -292,7 +292,7 @@ const translations = {
     // Trust Badges
     'trust.badge1': 'Transacciones seguras con encriptación de nivel bancario.',
     'trust.badge2': 'Entrega rápida y garantizada a todas las provincias.',
-    'trust.badge3': 'Servicio mejor valorado con miles de clientes satisfechos.',
+    'trust.badge3': 'Entregas verificadas y coordinadas via whatsapp.',
     // Sending Regions
     'regions.title': 'Cobertura en Toda la Isla',
     'regions.subtitle': 'Garantizamos la entrega segura en cada una de las provincias de Cuba, sin excepciones.',

@@ -12,7 +12,7 @@ interface HeroProps {
   onLoginClick: () => void;
 }
 
-const FIXED_AMOUNTS = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
+const FIXED_AMOUNTS = [100, 200, 300, 400, 500];
 const COMMISSION_RATE = 0.20; // 20%
 
 const Hero: React.FC<HeroProps> = ({ user, onStartTransfer, onLoginClick }) => {

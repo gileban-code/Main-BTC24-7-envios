@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { LockClosedIcon } from './icons/LockClosedIcon';
 import { LightningBoltIcon } from './icons/LightningBoltIcon';
-import { TrophyIcon } from './icons/TrophyIcon';
+import { HandshakeIcon } from './icons/HandshakeIcon';
 import { LanguageContext } from '../contexts/LanguageContext';
 
 const TrustBadges: React.FC = () => {
@@ -17,7 +17,7 @@ const TrustBadges: React.FC = () => {
       text: t('trust.badge2'),
     },
     {
-      icon: <TrophyIcon className="h-8 w-8 text-[#f9da07]" />,
+      icon: <HandshakeIcon className="h-8 w-8 text-[#f9da07]" />,
       text: t('trust.badge3'),
     },
   ];
