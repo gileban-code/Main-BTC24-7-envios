@@ -211,7 +211,7 @@ const translations = {
     'howItWorks.step2Title': 'Ingresa los datos del envío',
     'howItWorks.step2Desc': 'Selecciona la provincia de destino y la cantidad que quieres enviar a tu ser querido.',
     'howItWorks.step3Title': 'Confirma y paga',
-    'howItWorks.step3Desc': 'Paga con tu tarjeta o criptomonedas. Nosotros nos encargamos de entregarlo en su casa.',
+    'howItWorks.step3Desc': 'Paga con tu tarjeta o criptomonedas. Nosotros nos encargamos de coordinar su entrega.',
     // Features
     'features.title': '¿Por qué elegir nuestro servicio?',
     'features.subtitle': 'Ofrecemos más que solo envíos de dinero, ofrecemos tranquilidad y confianza.',
@@ -223,7 +223,7 @@ const translations = {
     'features.feature3Desc': 'Entregamos directamente en las manos de tu familiar, en cualquier provincia de Cuba bajo la máxima discreción posible.',
     'features.feature4Title': 'Entrega Garantizada',
     'features.feature4Desc': 'Garantizamos que el dinero llegará de forma segura y a tiempo. Tu tranquilidad es nuestra prioridad.',
-    'features.supportTitle': 'Soporte al cliente 24/7',
+    'features.supportTitle': 'Soporte BTC 24/7 envíos:',
     'features.supportDesc': 'Nuestro equipo está disponible para ayudarte en cualquier momento a través de WhatsApp o Telegram.',
     // Download App
     'download.title': 'Envía dinero desde donde estés con nuestra app',

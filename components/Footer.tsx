@@ -5,16 +5,14 @@ const Footer: React.FC = () => {
   const { t } = useContext(LanguageContext);
 
   const linkKeys = {
-    'footer.company.title': ['footer.company.about', 'footer.company.contact', 'footer.company.careers', 'footer.company.blog'],
-    'footer.quickLinks.title': ['footer.quickLinks.send', 'footer.quickLinks.receive', 'footer.quickLinks.track', 'footer.quickLinks.locations'],
-    'footer.legal.title': ['footer.legal.privacy', 'footer.legal.terms', 'footer.legal.fraud', 'footer.legal.ip'],
+    'footer.quickLinks.title': ['footer.quickLinks.send', 'footer.quickLinks.receive', 'footer.quickLinks.track'],
     'footer.support.title': ['footer.support.faq', 'footer.support.help', 'footer.support.contact', 'footer.support.complaint'],
   };
 
   return (
     <footer className="bg-black text-yellow-200">
       <div className="container mx-auto px-4 lg:px-8 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 gap-8">
           {Object.entries(linkKeys).map(([titleKey, itemKeys]) => (
             <div key={titleKey}>
               <h3 className="font-bold text-[#f9da07] uppercase tracking-wider text-sm">{t(titleKey)}</h3>
