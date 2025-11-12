@@ -4,6 +4,7 @@ const translations = {
     'header.sendMoney': 'Send Money',
     'header.howItWorks': 'How it works',
     'header.history': 'History',
+    'header.adminPanel': 'Admin Panel',
     'header.signedInAs': 'Signed in as',
     'header.logout': 'Logout',
     'header.login': 'Log In',
@@ -11,8 +12,8 @@ const translations = {
     // Hero
     'hero.title': 'The fastest and safest way to send money to Cuba',
     'hero.subtitle': 'Send to family and friends in any province of Cuba with complete discretion',
-    'hero.ratingExcellent': 'Excellent',
-    'hero.ratingReviews': 'Based on 5,000+ reviews',
+    'hero.ratingExcellent': 'Trust',
+    'hero.ratingReviews': 'Try it out and you\'ll recommend us.!!',
     'hero.destinationProvince': 'Destination Province',
     'hero.youSendFixed': 'You Send (Fixed Amounts)',
     'hero.transferFee': 'Transfer fee',
@@ -103,6 +104,8 @@ const translations = {
     'history.status': 'Status',
     'history.completed': 'Completed',
     'history.pending': 'Pending',
+    'history.enproceso': 'In Process',
+    'history.entregado': 'Delivered',
     'history.noTransactions': 'You have no transactions yet.',
     'history.noTransactionsDesc': 'Start a new transfer to send money to your loved ones in Cuba.',
     'history.sendMoneyButton': 'Send Money Now',
@@ -179,12 +182,19 @@ const translations = {
     'receipt.whatsapp': 'WhatsApp',
     'receipt.newTransfer': 'Make a New Transfer',
     'receipt.goToHistory': 'View Transaction History',
+    // Admin Dashboard
+    'admin.title': 'Administrator Dashboard',
+    'admin.user': 'User',
+    'admin.updateStatus': 'Update Status',
+    'admin.status.enproceso': 'In Process',
+    'admin.status.entregado': 'Delivered',
   },
   es: {
     // Header
     'header.sendMoney': 'Enviar Dinero',
     'header.howItWorks': 'Cómo funciona',
     'header.history': 'Historial',
+    'header.adminPanel': 'Panel de Admin',
     'header.signedInAs': 'Sesión iniciada como',
     'header.logout': 'Cerrar Sesión',
     'header.login': 'Iniciar Sesión',
@@ -192,8 +202,8 @@ const translations = {
     // Hero
     'hero.title': 'La forma más rápida y segura de enviar dinero a Cuba',
     'hero.subtitle': 'Envía a familia y amigos a cualquier provincia de Cuba con completa discreción',
-    'hero.ratingExcellent': 'Excelente',
-    'hero.ratingReviews': 'Basado en más de 5,000 reseñas',
+    'hero.ratingExcellent': 'Confianza',
+    'hero.ratingReviews': 'haz la prueba y nos recomendarás.!!',
     'hero.destinationProvince': 'Provincia de Destino',
     'hero.youSendFixed': 'Tú Envías (Montos Fijos)',
     'hero.transferFee': 'Comisión de transferencia',
@@ -284,6 +294,8 @@ const translations = {
     'history.status': 'Estado',
     'history.completed': 'Completado',
     'history.pending': 'Pendiente',
+    'history.enproceso': 'En Proceso',
+    'history.entregado': 'Entregado',
     'history.noTransactions': 'Aún no tienes transacciones.',
     'history.noTransactionsDesc': 'Inicia una nueva transferencia para enviar dinero a tus seres queridos en Cuba.',
     'history.sendMoneyButton': 'Enviar Dinero Ahora',
@@ -360,6 +372,12 @@ const translations = {
     'receipt.whatsapp': 'WhatsApp',
     'receipt.newTransfer': 'Realizar una Nueva Transferencia',
     'receipt.goToHistory': 'Ver Historial de Transacciones',
+    // Admin Dashboard
+    'admin.title': 'Panel de Administrador',
+    'admin.user': 'Usuario',
+    'admin.updateStatus': 'Actualizar Estado',
+    'admin.status.enproceso': 'En Proceso',
+    'admin.status.entregado': 'Entregado',
   }
 };
 

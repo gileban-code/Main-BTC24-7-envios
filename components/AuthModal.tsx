@@ -1,12 +1,13 @@
 import React, { useState, useContext } from 'react';
 import { XIcon } from './icons/XIcon';
-import { User } from '../App';
 import { LanguageContext } from '../contexts/LanguageContext';
+import { auth } from '../lib/firebase';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, AuthError } from 'firebase/auth';
 
 interface AuthModalProps {
   initialView: 'login' | 'signup';
   onClose: () => void;
-  onLoginSuccess: (user: User) => void;
+  onLoginSuccess: () => void;
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({ initialView, onClose, onLoginSuccess }) => {
@@ -15,40 +16,62 @@ const AuthModal: React.FC<AuthModalProps> = ({ initialView, onClose, onLoginSucc
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { t } = useContext(LanguageContext);
+  
+  const getFirebaseErrorMessage = (error: AuthError) => {
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+            return t('auth.errorExists');
+        case 'auth/invalid-email':
+            return 'The email address is not valid.';
+        case 'auth/operation-not-allowed':
+            return 'Email/password accounts are not enabled.';
+        case 'auth/weak-password':
+            return 'The password is too weak.';
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+        case 'auth/invalid-credential':
+             return t('auth.errorInvalid');
+        default:
+            return error.message;
+      }
+  }
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     if (password !== confirmPassword) {
       setError(t('auth.errorMatch'));
+      setLoading(false);
       return;
     }
 
-    const users = JSON.parse(localStorage.getItem('users') || '{}');
-    if (users[email]) {
-      setError(t('auth.errorExists'));
-      return;
+    try {
+        await createUserWithEmailAndPassword(auth, email, password);
+        alert(t('auth.signupSuccess'));
+        onLoginSuccess();
+    } catch (err) {
+        setError(getFirebaseErrorMessage(err as AuthError));
+    } finally {
+        setLoading(false);
     }
-
-    users[email] = { password }; // In a real app, hash the password
-    localStorage.setItem('users', JSON.stringify(users));
-    alert(t('auth.signupSuccess'));
-    setView('login');
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
-    const users = JSON.parse(localStorage.getItem('users') || '{}');
-    const user = users[email];
-
-    if (user && user.password === password) {
-      onLoginSuccess({ email });
-    } else {
-      setError(t('auth.errorInvalid'));
+    try {
+        await signInWithEmailAndPassword(auth, email, password);
+        onLoginSuccess();
+    } catch (err) {
+        setError(getFirebaseErrorMessage(err as AuthError));
+    } finally {
+        setLoading(false);
     }
   };
 
@@ -73,7 +96,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ initialView, onClose, onLoginSucc
                   <input id="login-password" type="password" value={password} onChange={e => setPassword(e.target.value)} required className="mt-1 block w-full px-3 py-2 border border-black rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-black focus:border-black sm:text-sm" />
                 </div>
                 {error && <p className="text-sm text-red-600">{error}</p>}
-                <button type="submit" className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-[#f9da07] bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black">{t('auth.loginButton')}</button>
+                <button type="submit" disabled={loading} className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-[#f9da07] bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:bg-gray-500">{loading ? 'Logging in...' : t('auth.loginButton')}</button>
               </form>
               <p className="mt-6 text-center text-sm text-black">
                 {t('auth.noAccount')}{' '}
@@ -97,7 +120,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ initialView, onClose, onLoginSucc
                   <input id="confirm-password" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required className="mt-1 block w-full px-3 py-2 border border-black rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-black focus:border-black sm:text-sm" />
                 </div>
                 {error && <p className="text-sm text-red-600">{error}</p>}
-                <button type="submit" className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-[#f9da07] bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black">{t('auth.createAccountButton')}</button>
+                <button type="submit" disabled={loading} className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-[#f9da07] bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:bg-gray-500">{loading ? 'Creating Account...' : t('auth.createAccountButton')}</button>
               </form>
               <p className="mt-6 text-center text-sm text-black">
                 {t('auth.hasAccount')}{' '}

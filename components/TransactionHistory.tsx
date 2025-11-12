@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { User, Transaction } from '../App';
 import { LanguageContext } from '../contexts/LanguageContext';
+import { db } from '../lib/firebase';
+import { collection, query, where, onSnapshot, orderBy, Timestamp } from 'firebase/firestore';
+
 
 interface TransactionHistoryProps {
   user: User;
@@ -9,15 +12,59 @@ interface TransactionHistoryProps {
 
 const TransactionHistory: React.FC<TransactionHistoryProps> = ({ user, onSendMoney }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
   const { t } = useContext(LanguageContext);
 
   useEffect(() => {
-    const userTransactionsKey = `transactions_${user.email}`;
-    const storedTransactions = localStorage.getItem(userTransactionsKey);
-    if (storedTransactions) {
-      setTransactions(JSON.parse(storedTransactions));
+    if (!user) return;
+    
+    const q = query(
+        collection(db, "transactions"), 
+        where("userId", "==", user.uid),
+        orderBy("date", "desc")
+    );
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const transactionsData: Transaction[] = [];
+      querySnapshot.forEach((doc) => {
+        transactionsData.push({ id: doc.id, ...doc.data() } as Transaction);
+      });
+      setTransactions(transactionsData);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  const formatDate = (timestamp: Timestamp) => {
+    if (!timestamp) return 'N/A';
+    return timestamp.toDate().toLocaleString();
+  }
+
+  const getStatusPill = (status: Transaction['status']) => {
+    const statusKey = status.toLowerCase().replace(' ', '');
+    switch (status) {
+        case 'Entregado':
+            return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-black text-[#f9da07]">{t(`history.${statusKey}`)}</span>;
+        case 'En Proceso':
+            return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-500 text-white">{t(`history.${statusKey}`)}</span>;
+        default:
+            return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-500 text-white">{t(`history.${statusKey}`)}</span>;
     }
-  }, [user.email]);
+  };
+
+  if (loading) {
+      return (
+          <section className="py-12 md:py-20 bg-[#f9da07] min-h-[60vh]">
+              <div className="container mx-auto px-4 lg:px-8">
+                  <h1 className="text-3xl md:text-4xl font-extrabold text-black mb-8">
+                    {t('history.title')}
+                  </h1>
+                  <p>Loading history...</p>
+              </div>
+          </section>
+      )
+  }
 
   return (
     <section className="py-12 md:py-20 bg-[#f9da07] min-h-[60vh]">
@@ -34,31 +81,21 @@ const TransactionHistory: React.FC<TransactionHistoryProps> = ({ user, onSendMon
                     <th scope="col" className="px-6 py-3">{t('history.orderNumber')}</th>
                     <th scope="col" className="px-6 py-3">{t('history.date')}</th>
                     <th scope="col" className="px-6 py-3">{t('history.beneficiary')}</th>
-                    <th scope="col" className="px-6 py-3">{t('history.idNumber')}</th>
                     <th scope="col" className="px-6 py-3">{t('history.destination')}</th>
                     <th scope="col" className="px-6 py-3 text-right">{t('history.totalPaid')}</th>
-                    <th scope="col" className="px-6 py-3 text-right">{t('history.receiverGets')}</th>
                     <th scope="col" className="px-6 py-3 text-center">{t('history.status')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {transactions.map((tx) => (
-                    <tr key={tx.orderNumber} className="bg-yellow-200 border-b border-black/20 hover:bg-yellow-300">
+                    <tr key={tx.id} className="bg-yellow-200 border-b border-black/20 hover:bg-yellow-300">
                       <td className="px-6 py-4 font-medium text-black whitespace-nowrap">{tx.orderNumber}</td>
-                      <td className="px-6 py-4">{tx.date}</td>
+                      <td className="px-6 py-4">{formatDate(tx.date)}</td>
                       <td className="px-6 py-4">{tx.recipient.fullName}</td>
-                      <td className="px-6 py-4">{tx.recipient.idNumber}</td>
                       <td className="px-6 py-4">{tx.details.destination}</td>
                       <td className="px-6 py-4 text-right">${tx.details.total.toFixed(2)}</td>
-                      <td className="px-6 py-4 text-right">
-                        ${tx.details.receiveAmount.toFixed(2)} USD
-                      </td>
                       <td className="px-6 py-4 text-center">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          tx.status === 'Completed' ? 'bg-black text-[#f9da07]' : 'bg-gray-500 text-white'
-                        }`}>
-                          {t(`history.${tx.status.toLowerCase()}`)}
-                        </span>
+                         {getStatusPill(tx.status)}
                       </td>
                     </tr>
                   ))}

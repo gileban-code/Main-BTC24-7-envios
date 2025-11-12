@@ -8,22 +8,31 @@ import { CryptoIcon } from './icons/CryptoIcon';
 
 interface CheckoutPageProps {
   transaction: Transaction;
-  onPaymentSuccess: (method: string) => void;
+  onPaymentInitiated: (method: string) => Promise<{ success: boolean, data?: any }>;
   onBack: () => void;
+  onPaymentSuccess: () => void;
 }
 
-const WALLET_ADDRESS = 'TMiWekumepbUWjB5GTo2acd9qQw6jx54qn';
+const WALLET_ADDRESS = 'TMiWekumepbUWjB5GTo2acd9qQw6jx54qn'; // This is now handled by backend
 
-const CheckoutPage: React.FC<CheckoutPageProps> = ({ transaction, onPaymentSuccess, onBack }) => {
+const CheckoutPage: React.FC<CheckoutPageProps> = ({ transaction, onPaymentInitiated, onBack, onPaymentSuccess }) => {
   const { t } = useContext(LanguageContext);
-  const [copied, setCopied] = useState(false);
+  const [loading, setLoading] = useState<string | null>(null);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(WALLET_ADDRESS).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  };
+  const handlePayment = async (method: string) => {
+    setLoading(method);
+    const result = await onPaymentInitiated(method);
+    if (result.success) {
+      if (method === 'Crypto' && result.data.invoice_url) {
+        // Redirect to NowPayments
+        window.location.href = result.data.invoice_url;
+      }
+      // For other methods, onPaymentSuccess is called from App.tsx after simulation
+    } else {
+        // Error is handled in App.tsx
+    }
+    setLoading(null);
+  }
 
   const recipient = transaction.recipient;
   const details = transaction.details;
@@ -54,7 +63,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ transaction, onPaymentSucce
                     <p><strong>{t('recipientForm.whatsapp')}:</strong> {recipient.whatsappPhone}</p>
                 </div>
             </div>
-             <button type="button" onClick={onBack} className="mt-6 text-sm font-medium text-black hover:underline">
+             <button type="button" onClick={onBack} className="mt-6 text-sm font-medium text-black hover:underline" disabled={!!loading}>
                 {t('recipientForm.back')}
               </button>
           </div>
@@ -63,8 +72,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ transaction, onPaymentSucce
           <div className="space-y-4">
             <h2 className="text-xl font-bold text-black">{t('checkout.paymentOptions')}</h2>
             {/* PayPal */}
-            <button onClick={() => onPaymentSuccess('PayPal')} className="w-full flex items-center justify-center p-4 bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow border border-gray-200">
-                <PayPalIcon className="h-8" />
+            <button onClick={() => handlePayment('PayPal')} disabled={!!loading} className="w-full flex items-center justify-center p-4 bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow border border-gray-200 disabled:opacity-50">
+                {loading === 'PayPal' ? 'Processing...' : <PayPalIcon className="h-8" />}
             </button>
             {/* Card */}
             <div className="w-full p-4 bg-white rounded-lg shadow-md border border-gray-200">
@@ -73,8 +82,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ transaction, onPaymentSucce
                     <VisaIcon className="h-8"/>
                     <MastercardIcon className="h-8"/>
                 </div>
-                <button onClick={() => onPaymentSuccess('Card')} className="mt-4 w-full bg-black text-white font-semibold py-2 rounded-md hover:bg-gray-800">
-                    Pay ${details.total.toFixed(2)}
+                <button onClick={() => handlePayment('Card')} disabled={!!loading} className="mt-4 w-full bg-black text-white font-semibold py-2 rounded-md hover:bg-gray-800 disabled:bg-gray-500">
+                    {loading === 'Card' ? 'Processing...' : `Pay $${details.total.toFixed(2)}`}
                 </button>
             </div>
             {/* Crypto */}
@@ -85,17 +94,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ transaction, onPaymentSucce
                     <CryptoIcon className="h-10 text-yellow-500"/>
                 </div>
                 <p className="text-sm font-semibold text-center text-black">{t('checkout.acceptedCrypto')}</p>
-                <div className="mt-4">
-                    <p className="text-xs font-bold text-black">{t('checkout.walletAddress')}</p>
-                    <div className="flex items-center mt-1 p-2 bg-gray-100 border rounded-md">
-                        <input type="text" readOnly value={WALLET_ADDRESS} className="w-full bg-transparent text-xs text-black focus:outline-none"/>
-                        <button onClick={handleCopy} className="ml-2 text-xs bg-gray-200 px-2 py-1 rounded hover:bg-gray-300">
-                            {copied ? t('checkout.copied') : t('checkout.copy')}
-                        </button>
-                    </div>
-                </div>
-                 <button onClick={() => onPaymentSuccess('Crypto')} className="mt-4 w-full bg-black text-white font-semibold py-2 rounded-md hover:bg-gray-800">
-                    I Have Paid
+                 <button onClick={() => handlePayment('Crypto')} disabled={!!loading} className="mt-4 w-full bg-black text-white font-semibold py-2 rounded-md hover:bg-gray-800 disabled:bg-gray-500">
+                    {loading === 'Crypto' ? 'Redirecting...' : 'Pay with Crypto'}
                 </button>
             </div>
           </div>

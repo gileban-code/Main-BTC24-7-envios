@@ -11,7 +11,7 @@ interface HeaderProps {
   onLogout: () => void;
   onLoginClick: () => void;
   onSignupClick: () => void;
-  onNavigate: (page: 'home' | 'history') => void;
+  onNavigate: (page: 'home' | 'history' | 'adminDashboard') => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ user, onLogout, onLoginClick, onSignupClick, onNavigate }) => {
@@ -22,7 +22,7 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout, onLoginClick, onSignupC
     setLanguage(language === 'en' ? 'es' : 'en');
   };
 
-  const handleNavClick = (page: 'home' | 'history') => {
+  const handleNavClick = (page: 'home' | 'history' | 'adminDashboard') => {
     onNavigate(page);
     if (page === 'home') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -32,7 +32,6 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout, onLoginClick, onSignupC
   
   const handleAnchorClick = (anchor: string) => {
     onNavigate('home');
-    // We need to wait for the home page to be set before we can scroll
     setTimeout(() => {
         const element = document.getElementById(anchor);
         if (element) {
@@ -55,6 +54,9 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout, onLoginClick, onSignupC
           <a href="#how-it-works" onClick={(e) => { e.preventDefault(); handleAnchorClick('how-it-works'); }} className="hover:text-white transition-colors">{t('header.howItWorks')}</a>
           {user && (
             <button onClick={() => handleNavClick('history')} className="hover:text-white transition-colors">{t('header.history')}</button>
+          )}
+          {user?.isAdmin && (
+             <button onClick={() => handleNavClick('adminDashboard')} className="hover:text-white transition-colors font-bold">{t('header.adminPanel')}</button>
           )}
           
           <button onClick={toggleLanguage} className="flex items-center hover:text-white transition-colors">
@@ -94,6 +96,9 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout, onLoginClick, onSignupC
             <a href="#how-it-works" onClick={(e) => { e.preventDefault(); handleAnchorClick('how-it-works'); }} className="hover:text-white transition-colors text-lg">{t('header.howItWorks')}</a>
             {user && (
               <button onClick={() => handleNavClick('history')} className="hover:text-white transition-colors text-lg">{t('header.history')}</button>
+            )}
+            {user?.isAdmin && (
+              <button onClick={() => handleNavClick('adminDashboard')} className="hover:text-white transition-colors text-lg font-bold">{t('header.adminPanel')}</button>
             )}
 
             <div className="pt-4 border-t border-yellow-900 w-full flex flex-col items-center space-y-4">

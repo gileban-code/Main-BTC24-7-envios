@@ -1,4 +1,4 @@
-import React, { useState, useCallback, ReactNode } from 'react';
+import React, { useState, useCallback, ReactNode, useEffect } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import HowItWorks from './components/HowItWorks';
@@ -18,9 +18,16 @@ import WarningModal from './components/WarningModal';
 import RecipientForm from './components/RecipientForm';
 import CheckoutPage from './components/CheckoutPage';
 import ReceiptPage from './components/ReceiptPage';
+import { auth, db } from './lib/firebase';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { doc, setDoc, getDoc, collection, serverTimestamp, addDoc, updateDoc } from "firebase/firestore";
+import AdminDashboard from './components/AdminDashboard';
+
 
 export interface User {
-  email: string;
+  uid: string;
+  email: string | null;
+  isAdmin: boolean;
 }
 
 export interface TransactionDetails {
@@ -37,18 +44,22 @@ export interface RecipientDetails {
 }
 
 export interface Transaction {
+  id?: string;
   orderNumber: string;
-  date: string;
+  date: any; // Firestore timestamp
   paymentMethod?: string;
   details: TransactionDetails;
   recipient: RecipientDetails;
-  status: 'Completed' | 'Pending';
+  status: 'En Proceso' | 'Entregado' | 'Pendiente' | 'Completado'; // Expanded statuses
+  userId: string;
+  userEmail?: string;
 }
 
-type Page = 'home' | 'history' | 'recipientForm' | 'checkout' | 'receipt';
+type Page = 'home' | 'history' | 'recipientForm' | 'checkout' | 'receipt' | 'adminDashboard';
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalInitialView, setAuthModalInitialView] = useState<'login' | 'signup'>('login');
@@ -56,6 +67,31 @@ function App() {
   const [currentTransaction, setCurrentTransaction] = useState<Partial<Transaction>>({});
 
   const [language, setLanguage] = useState<'en' | 'es'>('es');
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
+        // Force refresh to get latest claims
+        const idTokenResult = await firebaseUser.getIdTokenResult(true);
+        const isAdmin = idTokenResult.claims.isAdmin === true;
+
+        const userDocRef = doc(db, "users", firebaseUser.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (!userDoc.exists()) {
+          await setDoc(userDocRef, {
+            email: firebaseUser.email,
+            createdAt: serverTimestamp()
+          });
+        }
+        setUser({ uid: firebaseUser.uid, email: firebaseUser.email, isAdmin });
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const t = useCallback((key: string, options?: { [key: string]: string | number }) => {
     let translation = (translations[language] as Record<string, string>)[key] || key;
@@ -67,13 +103,12 @@ function App() {
     return translation;
   }, [language]);
 
-  const handleLoginSuccess = (loggedInUser: User) => {
-    setUser(loggedInUser);
+  const handleLoginSuccess = () => {
     setIsAuthModalOpen(false);
   };
 
   const handleLogout = () => {
-    setUser(null);
+    auth.signOut();
     setCurrentPage('home');
   };
 
@@ -87,7 +122,7 @@ function App() {
       openAuthModal('login');
       return;
     }
-    setCurrentTransaction({ details });
+    setCurrentTransaction({ details, userId: user.uid, userEmail: user.email, status: 'Pendiente' });
     setIsWarningModalOpen(true);
   };
 
@@ -101,45 +136,71 @@ function App() {
      setCurrentPage('checkout');
   };
 
-  const handlePaymentSuccess = (paymentMethod: string) => {
-    if (!user || !currentTransaction.details || !currentTransaction.recipient) return;
+  const handlePaymentInitiated = async (paymentMethod: string): Promise<{ success: boolean; data?: any; }> => {
+    if (!user || !currentTransaction.details || !currentTransaction.recipient) {
+        return { success: false, data: { message: "Missing transaction details."} };
+    }
 
-    const finalTransaction: Transaction = {
-      ...currentTransaction,
-      orderNumber: Math.random().toString().substr(2, 8),
-      date: new Date().toLocaleDateString(language),
-      paymentMethod,
-      status: 'Completed',
-    } as Transaction;
+    try {
+        const transactionToSave: Omit<Transaction, 'id'> = {
+            ...currentTransaction,
+            orderNumber: Math.random().toString(36).substr(2, 9).toUpperCase(),
+            date: serverTimestamp(),
+            paymentMethod,
+            status: 'En Proceso', // Initial status for operations
+        } as Omit<Transaction, 'id'>;
 
-    setCurrentTransaction(finalTransaction);
-    
-    // Save to local storage
-    const userTransactionsKey = `transactions_${user.email}`;
-    const existingTransactions: Transaction[] = JSON.parse(localStorage.getItem(userTransactionsKey) || '[]');
-    localStorage.setItem(userTransactionsKey, JSON.stringify([finalTransaction, ...existingTransactions]));
-    
-    // Simulate backend actions
-    console.log("--- SIMULATING BACKEND ACTIONS ---");
-    console.log("Sending confirmation email to:", user.email);
-    console.log("Sending notification to admin inbox.");
-    console.log("Appending order to Google Sheets:", {
-      Fecha: finalTransaction.date,
-      Hora: new Date().toLocaleTimeString(language),
-      'Provincia destino': finalTransaction.details.destination,
-      Beneficiario: finalTransaction.recipient.fullName,
-      'Tel/Email': `${finalTransaction.recipient.whatsappPhone} / ${finalTransaction.recipient.email}`,
-      Monto: `${finalTransaction.details.receiveAmount.toFixed(2)} USD`,
-      'Método de pago': finalTransaction.paymentMethod,
-    });
-    console.log("---------------------------------");
-    alert("Email simulations logged to console. Transaction complete!");
+        const transactionRef = await addDoc(collection(db, "transactions"), transactionToSave);
+        const finalTransaction = { ...transactionToSave, id: transactionRef.id };
+        setCurrentTransaction(finalTransaction);
 
+        // Always log to sheet upon creation
+        await fetch('YOUR_CLOUD_FUNCTION_URL/logTransactionToSheet', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ transactionId: transactionRef.id }),
+        });
 
-    setCurrentPage('receipt');
+        if (paymentMethod === 'Crypto') {
+            const response = await fetch('YOUR_CLOUD_FUNCTION_URL/createNowPaymentsInvoice', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    price_amount: finalTransaction.details.total,
+                    price_currency: 'usd',
+                    order_id: finalTransaction.id,
+                    order_description: `Transfer to ${finalTransaction.recipient.fullName}`
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to create payment invoice.');
+            }
+            const invoiceData = await response.json();
+            return { success: true, data: invoiceData };
+        } else {
+             // For Card/PayPal, we simulate success and move to receipt.
+             // The status is already 'En Proceso' and it's logged to Sheets.
+             const docRef = doc(db, "transactions", transactionRef.id);
+             await updateDoc(docRef, { status: "En Proceso" });
+             
+             setCurrentPage('receipt');
+             return { success: true };
+        }
+
+    } catch (error) {
+        console.error("Payment initiation failed:", error);
+        alert("Payment initiation failed. Please try again.");
+        return { success: false, data: { message: (error as Error).message } };
+    }
   };
+  
+  const handlePaymentSuccess = () => {
+    setCurrentPage('receipt');
+  }
 
-  const handleNavigate = (page: 'home' | 'history') => {
+
+  const handleNavigate = (page: Page) => {
     setCurrentPage(page);
   }
 
@@ -148,6 +209,10 @@ function App() {
     setLanguage,
     t
   };
+  
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center bg-[#f9da07]">Loading...</div>
+  }
 
   let pageContent: ReactNode;
 
@@ -156,13 +221,16 @@ function App() {
       pageContent = <RecipientForm transactionDetails={currentTransaction.details!} onSubmit={handleRecipientSubmit} onBack={() => setCurrentPage('home')} />;
       break;
     case 'checkout':
-      pageContent = <CheckoutPage transaction={currentTransaction as Transaction} onPaymentSuccess={handlePaymentSuccess} onBack={() => setCurrentPage('recipientForm')} />;
+      pageContent = <CheckoutPage transaction={currentTransaction as Transaction} onPaymentInitiated={handlePaymentInitiated} onBack={() => setCurrentPage('recipientForm')} onPaymentSuccess={handlePaymentSuccess} />;
       break;
     case 'receipt':
       pageContent = <ReceiptPage transaction={currentTransaction as Transaction} onNewTransfer={() => setCurrentPage('home')} onGoToHistory={() => setCurrentPage('history')} />;
       break;
     case 'history':
        pageContent = user ? <TransactionHistory user={user} onSendMoney={() => setCurrentPage('home')} /> : <>{/* Should not happen */}</>;
+       break;
+    case 'adminDashboard':
+       pageContent = user?.isAdmin ? <AdminDashboard /> : <div>Access Denied</div>;
        break;
     case 'home':
     default:
